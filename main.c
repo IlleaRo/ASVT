@@ -1,9 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
+
 #include "quick_sort/quick_sort.h"
 
-
+#define NUM_OF_STEPS 3
+#define PERCENT_OF_NOISE 30
 
 typedef struct img_params {
     unsigned long header_len;
@@ -64,6 +67,13 @@ unsigned char * readImg(const char *filename, img_params_t *params) {
     return res_img;
 }
 
+int get_noise_img(unsigned char *img, unsigned long size, unsigned int header_size) {
+    for (int i = 0; i < size; ++i) {
+        img[i + header_size] -= rand() % PERCENT_OF_NOISE;
+    }
+    return 0;
+}
+
 // Функция для записи PGM-изображения в файл
 void writePGM(const char *filename, unsigned char *image, img_params_t *params) {
     FILE *file = fopen(filename, "wb");
@@ -119,6 +129,9 @@ int main() {
     unsigned int height, width;
     img_params_t params;
 
+
+    srand(time(NULL));
+
     // Read source image
 
 
@@ -131,8 +144,11 @@ int main() {
         exit(EXIT_FAILURE);
     }
 
-    // Применение медианного фильтра
-    medianFilter(inputImg, outputImg, &params);
+    // Применение медианного фильтраparams
+    for (int i = 0; i < NUM_OF_STEPS; ++i) {
+        medianFilter(inputImg, outputImg, &params);
+        memcpy(&inputImg[params.header_len], &outputImg[params.header_len ], params.height * params.width);
+    }
 
     // Запись выходного изображения
     writePGM("output.pgm", outputImg, &params);
